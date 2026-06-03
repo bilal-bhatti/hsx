@@ -1,0 +1,20 @@
+[package]
+name = "hsx"
+version = "0.1.0"
+edition = "2021"
+description = "Portable cross-shell history substring search (zsh-history-substring-search, but for zsh/bash/dash/ksh)"
+license = "MIT"
+
+[[bin]]
+name = "hsx"
+path = "src/main.rs"
+
+[dependencies]
+crossterm = "0.28"
+
+[profile.release]
+strip = true
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"

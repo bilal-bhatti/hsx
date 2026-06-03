@@ -1,0 +1,43 @@
+# hsx — cross-shell history substring search (POSIX: dash / ksh integration)
+#
+# Install:   eval "$(hsx init ksh)"     # or: eval "$(hsx init dash)"
+#
+# dash and ksh cannot rewrite the command-line buffer from a shell function, so
+# hsx here is a full-screen PICKER (`hpick`) rather than in-line Up/Down cycling.
+# Run `hpick`, type to filter, Up/Down to move, Enter to run the selection,
+# Esc to cancel.
+#
+# Notes:
+#   * dash keeps no command history at all. Point hsx at a history file with
+#       export HSX_HISTFILE=/path/to/histfile
+#     (e.g. another shell's history) or hpick will have nothing to search.
+#   * mksh/ksh93 do keep history (via fc), so hpick works out of the box.
+#   * To bind a key in mksh:  set -o emacs;  bind '^R'=__hsx_pick_macro   is not
+#     possible (no buffer access), so use the `hpick` command instead — or wrap
+#     the shell in rlwrap if you want a bound key.
+
+_HSX_HIST="${TMPDIR:-/tmp}/hsx.$$.hist"
+
+__hsx_dump() {
+  if [ -n "$HSX_HISTFILE" ] && [ -r "$HSX_HISTFILE" ]; then
+    cp "$HSX_HISTFILE" "$_HSX_HIST"
+  elif fc -l 1 >/dev/null 2>&1; then
+    # ksh-family: list history, oldest-first, strip leading whitespace/numbers.
+    fc -ln 1 2>/dev/null | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//' > "$_HSX_HIST"
+  elif [ -n "$HISTFILE" ] && [ -r "$HISTFILE" ]; then
+    cp "$HISTFILE" "$_HSX_HIST"
+  else
+    : > "$_HSX_HIST"
+  fi
+}
+
+# Pick a command from history and run it (mirrors pressing Enter on a recall).
+hpick() {
+  __hsx_dump
+  __hsx_sel=$(command hsx pick --case "${HSX_CASE:-smart}" --hist "$_HSX_HIST") || return
+  [ -n "$__hsx_sel" ] || return
+  printf '%s\n' "$__hsx_sel"
+  eval "$__hsx_sel"
+}
+
+trap 'rm -f "$_HSX_HIST"' EXIT
