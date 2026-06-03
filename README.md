@@ -11,6 +11,9 @@ appear in the entry, in order but not necessarily adjacent. So `pu up` matches
 `pulumi --stack dev up`, and each matched word is highlighted separately. A
 single word behaves like a plain substring search.
 
+History is presented **newest-first and de-duplicated** — when the same command
+appears more than once, only its most recent run is shown.
+
 ## What you get, per shell
 
 Shells differ a lot in whether a key binding can read and rewrite the line being
@@ -63,8 +66,12 @@ load order is required.
 ### ksh / dash
 
 These shells can't rewrite the line from a function, so you get a full-screen
-picker. Run **`hpick`**, type to filter, **↑ / ↓** to move, **Enter** to run the
-selection, **Esc** to cancel.
+picker. Run **`hpick`**, type to filter, and:
+
+- **↑ / ↓** (or **Ctrl-P / Ctrl-N**) move through matches
+- **Backspace** edits the filter
+- **Enter** runs the selection
+- **Esc** (or **Ctrl-C / Ctrl-G**) cancels
 
 dash keeps no history of its own — give the picker something to search:
 
