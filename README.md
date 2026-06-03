@@ -28,14 +28,34 @@ edited, so the experience differs too:
 
 ## Install
 
-Build the binary and put it on your `PATH`:
+Install the `hsx` binary, then enable the shell integration.
+
+### Homebrew
 
 ```sh
-cargo build --release
-cp target/release/hsx /usr/local/bin/   # or anywhere on $PATH
+brew install bilal-bhatti/taps/hsx
 ```
 
-Then add the integration for your shell:
+Pulls a prebuilt binary from the latest [GitHub release](https://github.com/bilal-bhatti/hsx/releases). macOS (Apple Silicon and Intel) and Linux x86_64 are published.
+
+### Cargo
+
+```sh
+cargo install hsx
+```
+
+Pulls and compiles from [crates.io](https://crates.io/crates/hsx). Requires a Rust toolchain.
+
+### From source
+
+```sh
+cargo install --path .        # installs into ~/.cargo/bin
+# or: cargo build --release && cp target/release/hsx /usr/local/bin/
+```
+
+### Enable the shell integration
+
+Add the line for your shell:
 
 ```sh
 # ~/.zshrc

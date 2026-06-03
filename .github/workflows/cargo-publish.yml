@@ -1,0 +1,25 @@
+name: Publish to crates.io
+
+# Sibling workflow to release.yml (cargo-dist owns binaries + Homebrew tap;
+# this one owns crates.io). Runs on the same tag-push trigger; the two
+# pipelines are independent — failure of one does not roll back the other.
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo publish
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
