@@ -74,6 +74,9 @@ export HSX_HISTFILE="$HOME/.bash_history"   # or any newline-delimited file
 
 ## Configuration
 
+These are read by the shell integration (the shim), not the `hsx` binary itself,
+which is flag-driven. Set them in your rc file **before** the `eval "$(hsx init …)"`.
+
 | Variable | Default | Meaning |
 |----------|---------|---------|
 | `HSX_CASE` | `smart` | `smart` (case-insensitive unless the query has an uppercase char), `sensitive`, or `insensitive`. |
