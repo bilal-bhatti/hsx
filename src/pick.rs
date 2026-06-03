@@ -5,6 +5,7 @@
 //! **stdout** for capture (`cmd=$(hsx pick ...)`). The terminal is torn down via
 //! an RAII guard on the normal path and a panic hook on the abnormal one.
 
+use crate::args::take;
 use crate::history;
 use crate::search::{self, Case};
 use std::io::{self, Write};
@@ -29,18 +30,9 @@ pub fn run(args: &[String]) -> ExitCode {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "--query" => {
-                i += 1;
-                query = args.get(i).cloned().unwrap_or_default();
-            }
-            "--case" => {
-                i += 1;
-                case = Case::parse(&args.get(i).cloned().unwrap_or_default());
-            }
-            "--hist" => {
-                i += 1;
-                hist = args.get(i).cloned();
-            }
+            "--query" => query = take(args, &mut i),
+            "--case" => case = Case::parse(&take(args, &mut i)),
+            "--hist" => hist = Some(take(args, &mut i)),
             _ => {}
         }
         i += 1;

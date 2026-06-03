@@ -14,6 +14,7 @@
 //! <buffer...>        the line to place in the editor
 //! ```
 
+use crate::args::take;
 use crate::history;
 use crate::search::{self, Case};
 use std::process::ExitCode;
@@ -91,10 +92,4 @@ pub fn run(args: &[String]) -> ExitCode {
 /// Highlight spans for `query` within `entry` (empty if somehow unmatched).
 fn spans_of(entry: &str, query: &str, case: Case) -> Vec<(usize, usize)> {
     search::find_spans(entry, query, case).unwrap_or_default()
-}
-
-/// Consume the value following a flag, advancing the index.
-fn take(args: &[String], i: &mut usize) -> String {
-    *i += 1;
-    args.get(*i).cloned().unwrap_or_default()
 }

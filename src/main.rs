@@ -5,6 +5,7 @@
 //!   cycle ...      one ↑/↓ step of in-line search (used by zsh/bash shims)
 //!   pick ...       full-screen history picker (used by dash/ksh, or anywhere)
 
+mod args;
 mod cycle;
 mod history;
 mod init;

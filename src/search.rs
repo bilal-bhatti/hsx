@@ -37,36 +37,66 @@ fn insensitive(case: Case, query: &str) -> bool {
     }
 }
 
+/// A compiled query: one character "needle" per whitespace-separated token,
+/// plus the case mode resolved once against the whole query. Building this once
+/// keeps the per-entry work to just scanning the entry — the query is split and
+/// char-converted a single time rather than once per history entry.
+struct Pattern {
+    needles: Vec<Vec<char>>,
+    ci: bool,
+}
+
+impl Pattern {
+    fn new(query: &str, case: Case) -> Pattern {
+        Pattern {
+            ci: insensitive(case, query),
+            needles: query.split_whitespace().map(|t| t.chars().collect()).collect(),
+        }
+    }
+
+    /// Whether `entry` matches: every needle found in order and non-overlapping.
+    /// An empty pattern (query with no tokens) matches everything. Allocates the
+    /// entry's char vector but no spans, since the filter pass only needs a bool.
+    fn is_match(&self, entry: &str) -> bool {
+        if self.needles.is_empty() {
+            return true;
+        }
+        let chars: Vec<char> = entry.chars().collect();
+        let mut pos = 0;
+        for needle in &self.needles {
+            match find_from(&chars, needle, pos, self.ci) {
+                // Advance past this match so the next token comes after it, in order.
+                Some((_, end)) => pos = end,
+                None => return false,
+            }
+        }
+        true
+    }
+
+    /// Highlight spans for `entry`, one `(start, end)` per token, or `None` if
+    /// any token is missing. An empty pattern yields `Some(empty)`.
+    fn spans(&self, entry: &str) -> Option<Vec<(usize, usize)>> {
+        if self.needles.is_empty() {
+            return Some(Vec::new());
+        }
+        let chars: Vec<char> = entry.chars().collect();
+        let mut pos = 0;
+        let mut spans = Vec::with_capacity(self.needles.len());
+        for needle in &self.needles {
+            // Advance past this match so the next token comes after it, in order.
+            let (start, end) = find_from(&chars, needle, pos, self.ci)?;
+            spans.push((start, end));
+            pos = end;
+        }
+        Some(spans)
+    }
+}
+
 /// Match `query` against `entry`, returning one `(start, end)` character span
 /// per query token, or `None` if any token is missing. A query with no tokens
 /// (empty/whitespace) matches everything with no spans.
 pub fn find_spans(entry: &str, query: &str, case: Case) -> Option<Vec<(usize, usize)>> {
-    let tokens: Vec<&str> = query.split_whitespace().collect();
-    if tokens.is_empty() {
-        return Some(Vec::new());
-    }
-    let ci = insensitive(case, query);
-    let chars: Vec<char> = entry.chars().collect();
-
-    let mut pos = 0;
-    let mut spans = Vec::with_capacity(tokens.len());
-    for tok in tokens {
-        let needle: Vec<char> = tok.chars().collect();
-        match find_from(&chars, &needle, pos, ci) {
-            // Advance past this match so the next token comes after it, in order.
-            Some((start, end)) => {
-                spans.push((start, end));
-                pos = end;
-            }
-            None => return None,
-        }
-    }
-    Some(spans)
-}
-
-/// Whether `entry` matches `query` at all.
-fn is_match(entry: &str, query: &str, case: Case) -> bool {
-    find_spans(entry, query, case).is_some()
+    Pattern::new(query, case).spans(entry)
 }
 
 /// Find `needle` in `haystack` starting at character index `start`.
@@ -90,7 +120,9 @@ fn find_from(haystack: &[char], needle: &[char], start: usize, ci: bool) -> Opti
 
 fn char_eq(a: char, b: char, ci: bool) -> bool {
     if ci {
-        a == b || a.to_ascii_lowercase() == b.to_ascii_lowercase() || a.to_lowercase().eq(b.to_lowercase())
+        // The Unicode lowercase compare also covers ASCII; `a == b` is just a
+        // fast path for the common identical-char case.
+        a == b || a.to_lowercase().eq(b.to_lowercase())
     } else {
         a == b
     }
@@ -98,7 +130,8 @@ fn char_eq(a: char, b: char, ci: bool) -> bool {
 
 /// All entries matching `query`, preserving input order (newest-first).
 pub fn matches<'a>(entries: &'a [String], query: &str, case: Case) -> Vec<&'a String> {
-    entries.iter().filter(|e| is_match(e, query, case)).collect()
+    let pat = Pattern::new(query, case);
+    entries.iter().filter(|e| pat.is_match(e)).collect()
 }
 
 #[cfg(test)]
