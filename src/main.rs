@@ -52,10 +52,10 @@ COMMANDS:\n\
     cycle [...]     One up/down search step (called by the zsh/bash shims).\n\
     pick  [...]     Full-screen history picker (dash/ksh, or as a chooser).\n\
 \n\
-ENV:\n\
+ENV (read by the shell integration, not the subcommands directly):\n\
     HSX_CASE        smart | sensitive | insensitive   (default: smart)\n\
     HSX_HISTFILE    Explicit history file for shells with none (e.g. dash).\n\
-    HSX_HIGHLIGHT_FOUND / HSX_HIGHLIGHT_NOT_FOUND  zsh highlight specs.",
+    HSX_HIGHLIGHT_FOUND / HSX_HIGHLIGHT_NOT_FOUND  zsh-only highlight specs.",
         env!("CARGO_PKG_VERSION")
     );
 }
