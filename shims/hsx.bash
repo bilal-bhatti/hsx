@@ -50,8 +50,12 @@ _hsx_setup() {
     fi
 
     local out new_index buffer
+    # `printf x` + strip the sentinel preserves trailing newlines. Without it,
+    # an empty buffer collapses the header block and the `found` line (1) is
+    # read as the buffer, leaving a literal `1` on the prompt.
     out="$(hsx cycle --query "$_HSX_QUERY" --direction "$dir" \
-                     --index "$_HSX_INDEX" --case "$HSX_CASE" --hist "$_HSX_HIST")"
+                     --index "$_HSX_INDEX" --case "$HSX_CASE" --hist "$_HSX_HIST"; printf x)"
+    out="${out%x}"
 
     # Three header lines, then the buffer. bash/readline can't highlight, so the
     # highlights and found lines are skipped.
